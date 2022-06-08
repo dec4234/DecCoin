@@ -33,7 +33,7 @@ impl Block {
 
 pub fn to_hash(data: impl AsRef<[u8]>) -> Vec<u8> {
     let mut hasher = Sha256::new();
-    hasher.update(data);
+    sha2::Digest::update(&mut hasher, data);
     hasher.finalize().as_slice().to_vec()
 }
 
@@ -45,8 +45,9 @@ fn test_block() {
 #[test]
 fn hash_test() {
     let mut hasher = Sha256::new();
-    hasher.update(b"test");
+    sha2::Digest::update(&mut hasher, b"test");
     let result = hasher.finalize();
 
     println!("{}", result.len());
+    println!("{}", String::from_utf8_lossy(result.as_slice()));
 }

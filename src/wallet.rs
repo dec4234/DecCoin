@@ -3,6 +3,7 @@ use rand::rngs::OsRng;
 
 pub struct Wallet {
     keypair: Keypair,
+    pub balance: f64,
 }
 
 impl Wallet {
@@ -10,7 +11,8 @@ impl Wallet {
         let mut csrng = OsRng{};
 
         Self {
-            keypair: Keypair::generate(&mut csrng)
+            keypair: Keypair::generate(&mut csrng),
+            balance: 0.0,
         }
     }
 }
