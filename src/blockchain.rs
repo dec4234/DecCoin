@@ -1,5 +1,6 @@
 use std::hash::Hash;
 use std::ptr::hash;
+use bincode::Options;
 use crate::transaction::Transaction;
 use sha2::{Sha256, Digest};
 use sha2::digest::Update;
@@ -27,7 +28,7 @@ impl Block {
 
     // https://stackoverflow.com/questions/28127165/how-to-convert-struct-to-u8
     pub fn hash_of(&self) -> Vec<u8> {
-        bincode::serialize(self).unwrap()
+        to_hash(bincode::serialize(self).unwrap())
     }
 }
 
@@ -49,5 +50,19 @@ fn hash_test() {
     let result = hasher.finalize();
 
     println!("{}", result.len());
-    println!("{}", String::from_utf8_lossy(result.as_slice()));
+
+    for u in result.as_slice() {
+        let t = *u;
+
+        print!("{}", t.leading_zeros());
+
+        /*
+        for i in 0..8 {
+            print!("{}", t & (1 << i));
+        }
+
+        println!("");
+         */
+    }
+    println!("");
 }
