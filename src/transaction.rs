@@ -2,8 +2,9 @@ use std::str::FromStr;
 use uuid::Uuid;
 use serde::{Deserialize, Deserializer, Serialize};
 use anyhow::Result;
-use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signer};
+use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer, Verifier};
 use ed25519_dalek::ed25519::signature::Signature;
+use crate::blockchain::to_hash;
 
 // https://hackernoon.com/rusty-chains-a-basic-blockchain-implementation-written-in-pure-rust-gk2m3uri
 // https://github.com/emcthye/Proof-of-Stake-in-Rust
@@ -40,6 +41,14 @@ impl Transaction {
     pub fn get_uuid(&self) -> Uuid {
         Uuid::from_str(self.uuid.as_str()).unwrap()
     }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        bincode::serialize(self).unwrap()
+    }
+
+    pub fn hash_of(&self) -> Vec<u8> {
+        to_hash(bincode::serialize(self).unwrap())
+    }
 }
 
 impl PartialEq for Transaction {
@@ -60,7 +69,23 @@ impl SignedTransaction {
 
         SignedTransaction {
             trans,
-            signature: sign.as_bytes().to_vec(),
+            signature: sign.to_bytes().to_vec(),
         }
+    }
+    
+    pub fn to_bytes(&self) -> Vec<u8> {
+        bincode::serialize(self).unwrap()
+    }
+
+    pub fn hash_of(&self) -> Vec<u8> {
+        to_hash(bincode::serialize(self).unwrap())
+    }
+}
+
+pub fn verify(public: PublicKey, sign: SignedTransaction) -> bool {
+    if let Ok(output) = public.verify(sign.trans.to_bytes().as_slice(), &Signature::from_bytes(sign.signature.as_slice()).unwrap()) {
+        return true;
+    } else {
+        return false;
     }
 }

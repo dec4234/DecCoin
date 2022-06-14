@@ -25,7 +25,7 @@ impl Wallet {
 
         let trans = Transaction::new(amount, receiver, self.keypair.public.clone());
 
-
+        
 
         Ok(())
     }
