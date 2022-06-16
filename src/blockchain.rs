@@ -24,8 +24,8 @@ impl BlockChain {
     pub fn get_balance_of(&self, key: Vec<u8>) -> f64 {
         let mut bal = 0 as f64;
 
-        for block in self.blocks {
-            for trans in block.transactions {
+        for block in self.blocks.as_slice() {
+            for trans in block.transactions.as_slice() {
                 if trans.trans.receiver_public_key == key {
                     bal += trans.trans.amount;
                 }
@@ -45,10 +45,11 @@ pub struct Block {
     pub transactions: Vec<SignedTransaction>,
     pub prev_hash: Vec<u8>,
     pub nonce: u32,
+    pub reward: RewardBlock,
 }
 
 impl Block {
-    pub fn new(transactions: Vec<SignedTransaction>, prev_hash: Vec<u8>) -> Result<Self> {
+    pub fn new(transactions: Vec<SignedTransaction>, prev_hash: Vec<u8>, miner_public: PublicKey) -> Result<Self> {
         for st in &transactions {
             if !verify(st.trans.get_sender_public_key(), st) {
                 return Err(anyhow!("Transaction invalid - {} :: Amount - {}", String::from_utf8_lossy(st.trans.hash_of().as_slice()), st.trans.amount));
@@ -59,6 +60,7 @@ impl Block {
             transactions,
             prev_hash,
             nonce: 0,
+            reward: RewardBlock::new(miner_public),
         })
     }
 
@@ -74,6 +76,28 @@ impl Block {
         }
 
         return Ok((self.clone(), self.hash_of()));
+    }
+}
+
+const BLOCK_REWARD: f64 = 10.0;
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct RewardBlock {
+    pub public: Vec<u8>,
+    pub amount: f64,
+}
+
+impl RewardBlock {
+    /// Creates a new block reward using the miner's
+    /// public key. The public key provided is the one that
+    /// will receive the mining reward if the mine was successful.
+    ///
+    /// TO-DO: Decreasing block rewards based on number of mined blocks
+    pub fn new(public: PublicKey) -> Self {
+        Self {
+            public: public.to_bytes().to_vec(),
+            amount: BLOCK_REWARD,
+        }
     }
 }
 
