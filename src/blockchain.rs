@@ -7,6 +7,7 @@ use sha2::{Sha256, Digest};
 use sha2::digest::Update;
 use serde::{Deserialize, Serialize};
 use anyhow::Result;
+use ed25519_dalek::PublicKey;
 
 // Reduced to save time
 const ZEROES_NEEDED: u8 = 3; // The number of leading zeroes needed in a hash to successfully mine a block (Normally 19)
@@ -17,7 +18,26 @@ pub struct BlockChain {
 }
 
 impl BlockChain {
+    /// Returns the current balance of the user with the following
+    /// public key. Replays all transactions in the block chain to determine
+    /// their current balance.
+    pub fn get_balance_of(&self, key: Vec<u8>) -> f64 {
+        let mut bal = 0 as f64;
 
+        for block in self.blocks {
+            for trans in block.transactions {
+                if trans.trans.receiver_public_key == key {
+                    bal += trans.trans.amount;
+                }
+
+                if trans.trans.sender_public_key == key {
+                    bal -= trans.trans.amount;
+                }
+            }
+        }
+
+        return bal;
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -29,7 +49,7 @@ pub struct Block {
 
 impl Block {
     pub fn new(transactions: Vec<SignedTransaction>, prev_hash: Vec<u8>) -> Result<Self> {
-        for st in transactions {
+        for st in &transactions {
             if !verify(st.trans.get_sender_public_key(), st) {
                 return Err(anyhow!("Transaction invalid - {} :: Amount - {}", String::from_utf8_lossy(st.trans.hash_of().as_slice()), st.trans.amount));
             }
@@ -79,7 +99,7 @@ pub fn get_leading_zeroes(vec: Vec<u8>) -> u8 {
 
 #[test]
 fn test_block() {
-    let b = Block::new();
+
 }
 
 #[test]

@@ -3,7 +3,6 @@ use uuid::Uuid;
 use serde::{Deserialize, Deserializer, Serialize};
 use anyhow::Result;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer, Verifier};
-use ed25519_dalek::ed25519::signature::Signature;
 use crate::blockchain::to_hash;
 
 // https://hackernoon.com/rusty-chains-a-basic-blockchain-implementation-written-in-pure-rust-gk2m3uri
@@ -64,7 +63,7 @@ pub struct SignedTransaction {
 }
 
 impl SignedTransaction {
-    pub fn sign(trans: Transaction, pair: Keypair) -> SignedTransaction {
+    pub fn sign(trans: Transaction, pair: &Keypair) -> SignedTransaction {
         let sign = pair.sign(bincode::serialize(&trans).unwrap().as_slice());
 
         SignedTransaction {
@@ -82,7 +81,7 @@ impl SignedTransaction {
     }
 }
 
-pub fn verify(public: PublicKey, sign: SignedTransaction) -> bool {
+pub fn verify(public: PublicKey, sign: &SignedTransaction) -> bool {
     if let Ok(output) = public.verify(sign.trans.to_bytes().as_slice(), &Signature::from_bytes(sign.signature.as_slice()).unwrap()) {
         return true;
     } else {

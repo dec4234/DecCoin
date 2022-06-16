@@ -1,7 +1,7 @@
 use ed25519_dalek::{Keypair, PublicKey};
 use rand::rngs::OsRng;
 use anyhow::{anyhow, Result};
-use crate::transaction::Transaction;
+use crate::transaction::{SignedTransaction, Transaction};
 
 pub struct Wallet {
     keypair: Keypair,
@@ -18,14 +18,18 @@ impl Wallet {
         }
     }
 
-    pub fn prepare_transaction(&self, amount: f64, receiver: PublicKey) -> Result<()> {
+    pub fn prepare_transaction(&mut self, amount: f64, receiver: PublicKey) -> Result<()> {
         if amount > self.balance {
             return Err(anyhow!("Amount exceeds current balance!"));
         }
 
+        self.balance -= amount;
+
         let trans = Transaction::new(amount, receiver, self.keypair.public.clone());
 
-        
+        let signed = SignedTransaction::sign(trans, &self.keypair);
+
+        // broadcast to network
 
         Ok(())
     }
