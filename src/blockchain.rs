@@ -15,18 +15,18 @@ const ZEROES_NEEDED: u8 = 3; // The number of leading zeroes needed in a hash to
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct BlockChain {
     pub blocks: Vec<Block>,
-    pub init_key: PublicKey,
+    pub init_key: Vec<u8>,
 }
 
 impl BlockChain {
     pub fn new(init_key: PublicKey) -> Self {
         let blocks = Vec::new();
 
-
+        // Add genesis block here
 
         Self {
             blocks,
-            init_key,
+            init_key: init_key.as_bytes().to_vec(),
         }
     }
 
@@ -76,7 +76,7 @@ impl Block {
         })
     }
 
-    pub fn create_genesis(init_key: PublicKey) -> Self {
+    pub fn create_genesis(init_key: Vec<u8>) -> Self {
         let transactions = Vec::new();
 
         // Add genesis transaction here
@@ -86,7 +86,7 @@ impl Block {
             transactions,
             prev_hash: "GENESIS".as_bytes().to_vec(),
             nonce: 0,
-            reward: RewardBlock::new(init_key),
+            reward: RewardBlock::new_from_bytes(init_key),
         }
     }
 
@@ -122,6 +122,13 @@ impl RewardBlock {
     pub fn new(public: PublicKey) -> Self {
         Self {
             public: public.to_bytes().to_vec(),
+            amount: BLOCK_REWARD,
+        }
+    }
+
+    pub fn new_from_bytes(public: Vec<u8>) -> Self {
+        Self {
+            public,
             amount: BLOCK_REWARD,
         }
     }
