@@ -15,9 +15,21 @@ const ZEROES_NEEDED: u8 = 3; // The number of leading zeroes needed in a hash to
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct BlockChain {
     pub blocks: Vec<Block>,
+    pub init_key: PublicKey,
 }
 
 impl BlockChain {
+    pub fn new(init_key: PublicKey) -> Self {
+        let blocks = Vec::new();
+
+
+
+        Self {
+            blocks,
+            init_key,
+        }
+    }
+
     /// Returns the current balance of the user with the following
     /// public key. Replays all transactions in the block chain to determine
     /// their current balance.
@@ -62,6 +74,20 @@ impl Block {
             nonce: 0,
             reward: RewardBlock::new(miner_public),
         })
+    }
+
+    pub fn create_genesis(init_key: PublicKey) -> Self {
+        let transactions = Vec::new();
+
+        // Add genesis transaction here
+
+
+        Self {
+            transactions,
+            prev_hash: "GENESIS".as_bytes().to_vec(),
+            nonce: 0,
+            reward: RewardBlock::new(init_key),
+        }
     }
 
     // https://stackoverflow.com/questions/28127165/how-to-convert-struct-to-u8

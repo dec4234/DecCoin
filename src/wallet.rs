@@ -1,3 +1,4 @@
+use std::sync::mpsc::Sender;
 use ed25519_dalek::{Keypair, PublicKey};
 use rand::rngs::OsRng;
 use anyhow::{anyhow, Result};
@@ -18,7 +19,7 @@ impl Wallet {
         }
     }
 
-    pub fn prepare_transaction(&mut self, amount: f64, receiver: PublicKey) -> Result<()> {
+    pub fn prepare_transaction(&mut self, amount: f64, receiver: PublicKey, sender: Sender<String>) -> Result<()> {
         if amount > self.balance {
             return Err(anyhow!("Amount exceeds current balance!"));
         }
@@ -30,6 +31,7 @@ impl Wallet {
         let signed = SignedTransaction::sign(trans, &self.keypair);
 
         // broadcast to network
+
 
         Ok(())
     }
