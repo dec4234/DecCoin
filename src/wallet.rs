@@ -23,7 +23,7 @@ impl Wallet {
         self.keypair.public
     }
 
-    pub fn prepare_transaction(&mut self, amount: f64, receiver: PublicKey, sender: Sender<String>) -> Result<()> {
+    pub fn make_transaction(&mut self, amount: f64, receiver: PublicKey, sender: Sender<String>) -> Result<()> {
         if amount > self.balance {
             return Err(anyhow!("Amount exceeds current balance!"));
         }
@@ -35,7 +35,7 @@ impl Wallet {
         let signed = SignedTransaction::sign(trans, &self.keypair);
 
         // broadcast to network
-
+        sender.send(serde_json::to_string(&signed)?)?;
 
         Ok(())
     }

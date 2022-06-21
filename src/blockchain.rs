@@ -54,6 +54,10 @@ impl BlockChain {
     pub fn add_verified_block(&mut self, block: Block) {
         self.blocks.push(block);
     }
+
+    pub fn hash_of_last(&self) -> Vec<u8> {
+        self.blocks.last().unwrap().hash_of()
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

@@ -1,7 +1,9 @@
 // https://github.com/libp2p/rust-libp2p/blob/master/examples/chat.rs
 
+use std::sync::mpsc::{Receiver, Sender};
 use crate::blockchain::{Block, BlockChain};
 use anyhow::{anyhow, Result};
+use crate::transaction::SignedTransaction;
 
 pub struct Network {
     blockchain: BlockChain,
@@ -36,5 +38,16 @@ impl Network {
 
 
         Ok(())
+    }
+
+    pub fn create_new_blocks(recv: Receiver<SignedTransaction>, send: Sender<Block>) -> Result<()> {
+        loop {
+            for i in 0..5 { // Collect 5 transactions into a block
+                let sTrans = recv.recv()?;
+
+            }
+
+
+        }
     }
 }
