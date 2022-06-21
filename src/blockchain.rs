@@ -50,6 +50,10 @@ impl BlockChain {
 
         return bal;
     }
+
+    pub fn add_verified_block(&mut self, block: Block) {
+        self.blocks.push(block);
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -102,6 +106,13 @@ impl Block {
         }
 
         return Ok((self.clone(), self.hash_of()));
+    }
+
+    /// Ensures that the block has been mined
+    /// enough to meet the requirements of the proof-of-work
+    /// structure.
+    pub fn is_mined(&self) -> bool {
+        get_leading_zeroes(self.hash_of()) == ZEROES_NEEDED
     }
 }
 

@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use uuid::Uuid;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -56,6 +57,12 @@ impl PartialEq for Transaction {
     }
 }
 
+impl Display for Transaction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Transaction: {} to {} for {} DecCoin", String::from_utf8(self.sender_public_key.clone()).unwrap(), String::from_utf8(self.receiver_public_key.clone()).unwrap(), self.amount)
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct SignedTransaction {
     pub trans: Transaction,
@@ -78,6 +85,14 @@ impl SignedTransaction {
 
     pub fn hash_of(&self) -> Vec<u8> {
         to_hash(bincode::serialize(self).unwrap())
+    }
+
+    pub fn is_valid(&self) -> bool {
+        if let Ok(key) = PublicKey::from_bytes(self.trans.sender_public_key.as_slice()) {
+            return verify(key, self);
+        }
+
+        false
     }
 }
 

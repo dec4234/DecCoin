@@ -11,9 +11,8 @@ pub mod network;
 // https://bitcoin.org/bitcoin.pdf
 #[tokio::main]
 async fn main() {
-    let chan = mpsc::channel();
+    // let chan = mpsc::channel();
 
     let wallet = Wallet::new();
-
 
 }

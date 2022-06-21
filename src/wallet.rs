@@ -18,6 +18,10 @@ impl Wallet {
             balance: 0.0,
         }
     }
+    
+    pub fn get_public_key(&self) -> PublicKey {
+        self.keypair.public
+    }
 
     pub fn prepare_transaction(&mut self, amount: f64, receiver: PublicKey, sender: Sender<String>) -> Result<()> {
         if amount > self.balance {
