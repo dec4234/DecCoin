@@ -116,7 +116,7 @@ impl Block {
     /// enough to meet the requirements of the proof-of-work
     /// structure.
     pub fn is_mined(&self) -> bool {
-        get_leading_zeroes(self.hash_of()) == ZEROES_NEEDED
+        get_leading_zeroes(self.hash_of()) >= ZEROES_NEEDED
     }
 }
 
