@@ -63,6 +63,13 @@ impl Display for Transaction {
     }
 }
 
+impl From<SignedTransaction> for Transaction {
+    /// Convert a SignedTransaction to a Transaction
+    fn from(st: SignedTransaction) -> Self {
+        st.trans
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct SignedTransaction {
     pub trans: Transaction,
@@ -87,7 +94,7 @@ impl SignedTransaction {
         to_hash(bincode::serialize(self).unwrap())
     }
 
-    pub fn is_valid(&self) -> bool {
+    pub fn verify_signature(&self) -> bool {
         if let Ok(key) = PublicKey::from_bytes(self.trans.sender_public_key.as_slice()) {
             return verify(key, self);
         }

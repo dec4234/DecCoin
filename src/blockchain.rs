@@ -33,8 +33,10 @@ impl BlockChain {
     /// Returns the current balance of the user with the following
     /// public key. Replays all transactions in the block chain to determine
     /// their current balance.
-    pub fn get_balance_of(&self, key: Vec<u8>) -> f64 {
+    pub fn get_balance_of(&self, key: &Vec<u8>) -> f64 {
         let mut bal = 0 as f64;
+
+        let key = key.clone();
 
         for block in self.blocks.as_slice() {
             for trans in block.transactions.as_slice() {
@@ -49,6 +51,14 @@ impl BlockChain {
         }
 
         return bal;
+    }
+
+    pub fn verify_transaction(&self, trans: &Transaction) -> Result<()> {
+        if self.get_balance_of(&trans.sender_public_key) < trans.amount {
+            return Err(anyhow!("Balance of sender is not sufficient for amount in the transaction."));
+        }
+
+        Ok(())
     }
 
     pub fn add_verified_block(&mut self, block: Block) {

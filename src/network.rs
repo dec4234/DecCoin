@@ -1,11 +1,21 @@
 // https://github.com/libp2p/rust-libp2p/blob/master/examples/chat.rs
 
+use std::io;
+use std::io::BufRead;
 use std::sync::mpsc::{Receiver, Sender};
 use crate::blockchain::{Block, BlockChain};
 use anyhow::{anyhow, Result};
 use ed25519_dalek::PublicKey;
-use libp2p::{identity, PeerId};
+use libp2p::{
+    floodsub::{self, Floodsub, FloodsubEvent},
+    identity,
+    mdns::{Mdns, MdnsConfig, MdnsEvent},
+    swarm::SwarmEvent,
+    Multiaddr, NetworkBehaviour, PeerId, Swarm,
+};
+use libp2p::futures::select;
 use once_cell::sync::Lazy;
+use tokio::task;
 use crate::transaction::SignedTransaction;
 
 static KEYS: Lazy<identity::Keypair> = Lazy::new(|| identity::Keypair::generate_ed25519() );
@@ -38,27 +48,29 @@ impl Network {
 
         // Validate the block's transactions
         for trans in block.transactions.as_slice() {
-            if !trans.is_valid() {
-                return Err(anyhow!("Invalid: {}", trans.trans));
+            if !trans.verify_signature() {
+                return Err(anyhow!("Invalid Signature: {}", trans.trans));
             }
+
+            self.blockchain.verify_transaction(&trans.trans)?;
         }
 
 
         Ok(())
     }
 
-    const TRANSACTIONS_PER_BLOCK: u8 = 1;
-
     /// Take incoming transactions and combine them together in a new block.
     /// Adds mined blocks to the end of the blockchain and broadcasts them to the network.
     pub fn create_new_blocks(&mut self, recv: Receiver<SignedTransaction>, send: Sender<Block>, miner_public: PublicKey) -> Result<()> {
+        const TRANSACTIONS_PER_BLOCK: u8 = 1;
+
         loop {
             let mut vec = Vec::new();
 
             while vec.len() < TRANSACTIONS_PER_BLOCK as usize {
                 let incoming = recv.recv()?;
 
-                if incoming.is_valid() {
+                if incoming.verify_signature() && self.blockchain.verify_transaction(&incoming.trans).is_ok() {
                     vec.push(incoming);
                 }
             }
