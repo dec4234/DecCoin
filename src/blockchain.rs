@@ -20,9 +20,10 @@ pub struct BlockChain {
 
 impl BlockChain {
     pub fn new(init_key: PublicKey) -> Self {
-        let blocks = Vec::new();
+        let mut blocks = Vec::new();
 
         // Add genesis block here
+        blocks.push(Block::create_genesis(init_key.to_bytes().to_vec()));
 
         Self {
             blocks,

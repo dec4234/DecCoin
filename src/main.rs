@@ -4,7 +4,7 @@ use std::convert::identity;
 use std::sync::mpsc;
 use libp2p::{identity, PeerId};
 use once_cell::sync::Lazy;
-use crate::blockchain::Block;
+use crate::blockchain::{Block, BlockChain};
 use crate::transaction::SignedTransaction;
 use crate::wallet::Wallet;
 
@@ -21,5 +21,5 @@ async fn main() {
 
     let wallet = Wallet::new();
 
-
+    let blockchain = BlockChain::new(wallet.get_public_key());
 }
