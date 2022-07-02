@@ -114,7 +114,7 @@ impl Block {
         to_hash(bincode::serialize(self).unwrap())
     }
 
-    pub fn mine(&mut self) -> Result<(Block, Vec<u8>)> {
+    pub async fn mine(&mut self) -> Result<(Block, Vec<u8>)> {
 
         while get_leading_zeroes(self.hash_of()) < ZEROES_NEEDED {
             self.nonce += 1;

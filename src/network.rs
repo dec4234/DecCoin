@@ -15,6 +15,7 @@ use libp2p::{
 };
 use libp2p::futures::select;
 use once_cell::sync::Lazy;
+use tokio::sync::Mutex;
 use tokio::task;
 use crate::transaction::SignedTransaction;
 
@@ -22,17 +23,19 @@ static KEYS: Lazy<identity::Keypair> = Lazy::new(|| identity::Keypair::generate_
 static PEER_ID: Lazy<PeerId> = Lazy::new(|| PeerId::from(KEYS.public()) );
 
 pub struct Network {
-    blockchain: BlockChain,
+    blockchain: Mutex<BlockChain>,
+    pub chan: (Sender<Block>, Receiver<Block>),
 }
 
 impl Network {
-    pub fn new(blockchain: BlockChain) -> Self {
+    pub fn new(blockchain: BlockChain, chan: (Sender<Block>, Receiver<Block>)) -> Self {
         Self {
-            blockchain,
+            blockchain: Mutex::new(blockchain),
+            chan,
         }
     }
 
-    pub fn verify_block(&mut self, block: &Block) -> Result<()> {
+    pub async fn verify_block(&mut self, block: &Block) -> Result<()> {
 
         // Make sure that the hash of the block is mined correctly
         if !block.is_mined() {
@@ -40,7 +43,7 @@ impl Network {
         }
 
         // Make sure hash of previous block is correct
-        if let Some(last) = self.blockchain.blocks.last() {
+        if let Some(last) = self.blockchain.lock().await.blocks.last() {
             if block.prev_hash != last.hash_of() {
                 return Err(anyhow!("Block prev_hash does not match hash of previous block"));
             }
@@ -52,7 +55,7 @@ impl Network {
                 return Err(anyhow!("Invalid Signature: {}", trans.trans));
             }
 
-            self.blockchain.verify_transaction(&trans.trans)?;
+            self.blockchain.lock().await.verify_transaction(&trans.trans)?;
         }
 
 
@@ -61,7 +64,7 @@ impl Network {
 
     /// Take incoming transactions and combine them together in a new block.
     /// Adds mined blocks to the end of the blockchain and broadcasts them to the network.
-    pub fn create_new_blocks(&mut self, recv: Receiver<SignedTransaction>, send: Sender<Block>, miner_public: PublicKey) -> Result<()> {
+    pub async fn create_new_blocks(&mut self, recv: Receiver<SignedTransaction>, send: Sender<Block>, miner_public: PublicKey) -> Result<()> {
         const TRANSACTIONS_PER_BLOCK: u8 = 1;
 
         loop {
@@ -70,12 +73,12 @@ impl Network {
             while vec.len() < TRANSACTIONS_PER_BLOCK as usize {
                 let incoming = recv.recv()?;
 
-                if incoming.verify_signature() && self.blockchain.verify_transaction(&incoming.trans).is_ok() {
+                if incoming.verify_signature() && self.blockchain.lock().await.verify_transaction(&incoming.trans).is_ok() {
                     vec.push(incoming);
                 }
             }
 
-            let mut block = Block::new(vec, self.blockchain.hash_of_last(), miner_public.clone())?;
+            let mut block = Block::new(vec, self.blockchain.lock().await.hash_of_last(), miner_public.clone())?;
 
             block.mine()?;
 

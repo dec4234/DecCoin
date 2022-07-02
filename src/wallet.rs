@@ -7,15 +7,17 @@ use crate::transaction::{SignedTransaction, Transaction};
 pub struct Wallet {
     keypair: Keypair,
     pub balance: f64,
+    sender: Sender<SignedTransaction>,
 }
 
 impl Wallet {
-    pub fn new() -> Self {
+    pub fn new(sender: Sender<SignedTransaction>) -> Self {
         let mut csrng = OsRng{};
 
         Self {
             keypair: Keypair::generate(&mut csrng),
             balance: 0.0,
+            sender,
         }
     }
     
@@ -23,7 +25,7 @@ impl Wallet {
         self.keypair.public
     }
 
-    pub fn make_transaction(&mut self, amount: f64, receiver: PublicKey, sender: Sender<String>) -> Result<()> {
+    pub fn make_transaction(&mut self, amount: f64, receiver: PublicKey) -> Result<()> {
         if amount > self.balance {
             return Err(anyhow!("Amount exceeds current balance!"));
         }
@@ -35,7 +37,7 @@ impl Wallet {
         let signed = SignedTransaction::sign(trans, &self.keypair);
 
         // broadcast to network
-        sender.send(serde_json::to_string(&signed)?)?;
+        self.sender.send(signed)?;
 
         Ok(())
     }
