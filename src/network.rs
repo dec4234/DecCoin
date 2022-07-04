@@ -80,11 +80,11 @@ impl Network {
 
             let mut block = Block::new(vec, self.blockchain.lock().await.hash_of_last(), miner_public.clone())?;
 
-            block.mine()?;
+            block.mine().await?;
 
             send.send(block.clone())?;
 
-            self.blockchain.add_verified_block(block);
+            self.blockchain.lock().await.add_verified_block(block);
         }
     }
 }

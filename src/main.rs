@@ -21,5 +21,5 @@ async fn main() {
     let wallet = Wallet::new(strans_chan.0.clone());
 
     let blockchain = BlockChain::new(wallet.get_public_key());
-    let network = Network::new(blockchain);
+    let network = Network::new(blockchain, block_chan);
 }
