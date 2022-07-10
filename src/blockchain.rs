@@ -11,6 +11,8 @@ use ed25519_dalek::PublicKey;
 
 // Reduced to save time
 const ZEROES_NEEDED: u8 = 3; // The number of leading zeroes needed in a hash to successfully mine a block (Normally 19)
+// Normally adjusted as needed to reach a certain number of target blocks per hour
+// This way the same number of blocks are created every hour regardless of the total mining capacity of the blockchain
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct BlockChain {
@@ -99,6 +101,7 @@ impl Block {
         let transactions = Vec::new();
 
         // Add genesis transaction here
+
 
 
         Self {
