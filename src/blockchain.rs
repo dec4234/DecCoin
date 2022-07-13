@@ -166,7 +166,11 @@ impl RewardBlock {
 pub fn to_hash(data: impl AsRef<[u8]>) -> Vec<u8> {
     let mut hasher = Sha256::new();
     sha2::Digest::update(&mut hasher, data);
-    hasher.finalize().as_slice().to_vec()
+    hasher.finalize().to_vec()
+}
+
+pub fn hash_string(data: &'static str) -> Vec<u8> {
+    to_hash(data.as_bytes())
 }
 
 pub fn get_leading_zeroes(vec: Vec<u8>) -> u8 {
@@ -196,10 +200,9 @@ fn hash_test() {
 
     println!("{}", result.len());
 
-    for u in result.as_slice() {
-        let t = *u;
+    for u in result.to_vec() {
 
-        print!("{}", t.leading_zeros());
+        print!("{}", u.leading_zeros());
 
         /*
         for i in 0..8 {
