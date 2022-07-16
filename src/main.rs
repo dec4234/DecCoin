@@ -31,6 +31,7 @@ async fn main() {
 
 #[tokio::test]
 async fn snark_test() { // https://github.com/Microsoft/Spartan/ example
+    // https://docs.rs/merlin/latest/merlin/
     // specify the size of an R1CS instance
     let num_vars = 1024;
     let num_cons = 1024;
@@ -46,17 +47,24 @@ async fn snark_test() { // https://github.com/Microsoft/Spartan/ example
     // combine whatever the hell a R1SC instance is with the keys
     let (comm, decomm) = SNARK::encode(&inst, &gens);
 
+
     // The person who has the item that needs to be proved creates the SNARK for the verifier to look at
     // todo!();
 
-    let mut prover_transcript = Transcript::new(b"TEST STRING"); // this is where the hash of the item goes
+    let mut prover_transcript = Transcript::new(b"LABEL"); // this is where the hash of the item goes
+    prover_transcript.append_message(b"LABEL", b"TEST MESSAGE");
+
     let proof = SNARK::prove(&inst, &decomm, vars, &inputs, &gens, &mut prover_transcript);
 
-    let mut verifier_transcript = Transcript::new(b"TEST STRING"); // hash of item goes here
-
-    // need to be able to convert Vec<u8> to &'static [u8]
+    let mut verifier_transcript = Transcript::new(b"LABEL"); // hash of item goes here
+    verifier_transcript.append_message(b"LABEL", b"TEST MESSAGE");
 
     // Verifier proves that prover has the item that produces that correspnding hash
     assert!(proof.verify(&comm, &inputs, &mut verifier_transcript, &gens).is_ok());
     println!("proof verification successful!");
+
+    /*
+    Next Step:
+    1. Combine multiple SNARKs together and prove that they are all correct
+    */
 }
